@@ -41,6 +41,8 @@ example
 # generated native folders
 /ios
 /android
+/app/ios
+/app/android
 
 # build outputs and secrets
 /build

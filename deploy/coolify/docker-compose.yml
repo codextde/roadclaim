@@ -1,0 +1,60 @@
+# Roadclaim API on Coolify v4
+#
+# New Resource -> Public/Private Repository -> Build Pack: "Docker Compose"
+#   Base Directory:           /deploy/coolify
+#   Docker Compose Location:  /docker-compose.yml
+# Then set the domain of the "api" service (e.g. https://roadclaim-api.codext.de) and deploy.
+# Coolify generates SERVICE_PASSWORD_POSTGRES and SERVICE_PASSWORD_64_SECRET once and keeps them.
+# Optional variables in the Coolify UI: GEMINI_API_KEY, GEMINI_IMAGE_MODEL, MODS_PER_DAY,
+# MODS_GLOBAL_PER_DAY, CORS_ORIGINS, PUBLIC_URL.
+#
+# Local smoke test from the repo root:
+#   SERVICE_PASSWORD_POSTGRES=dev SERVICE_PASSWORD_64_SECRET=devsecretdevsecret \
+#     docker compose -f deploy/coolify/docker-compose.yml up --build
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: server/Dockerfile
+    environment:
+      - SERVICE_FQDN_API_8080
+      - PORT=8080
+      - DATABASE_URL=postgres://roadclaim:${SERVICE_PASSWORD_POSTGRES}@db:5432/roadclaim
+      - SECRET_KEY=${SERVICE_PASSWORD_64_SECRET}
+      - PUBLIC_URL=${PUBLIC_URL:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://roadclaim.codext.de}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_IMAGE_MODEL=${GEMINI_IMAGE_MODEL:-gemini-2.5-flash-image}
+      - MODS_PER_DAY=${MODS_PER_DAY:-3}
+      - MODS_GLOBAL_PER_DAY=${MODS_GLOBAL_PER_DAY:-100}
+    expose:
+      - "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=roadclaim
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_DB=roadclaim
+    volumes:
+      - roadclaim-db:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roadclaim -d roadclaim"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  roadclaim-db:

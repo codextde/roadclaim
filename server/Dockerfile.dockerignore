@@ -1,0 +1,6 @@
+*
+!server/package.json
+!server/bun.lock
+!server/tsconfig.json
+!server/migrations
+!server/src
