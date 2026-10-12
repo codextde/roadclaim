@@ -1,0 +1,16 @@
+export const disclosure = {
+  eyebrow: 'Automatic recording',
+  title: 'Location in the background',
+  required: 'Roadclaim collects location data to record your drives automatically, even when the app is closed or not in use.',
+  usedFor: 'What it is used for',
+  useRoute: 'The route and distance of each drive',
+  useStats: 'Your drive stats: speed, turns, brake presses, climbs',
+  useCells: 'The territory hexagons you claim on the map',
+  motion: 'Roadclaim also uses motion activity (physical activity on Android) to notice when you start and stop driving.',
+  privacy: 'Your routes stay on your phone. For the territory game only hexagon cell ids are uploaded, never coordinates. No ads, no tracking.',
+  allow: 'Allow',
+  notNow: 'Not now',
+  notNowHint: 'Without it you start and stop drives yourself.',
+  alwaysHintIos: 'In the next dialogs choose "Allow While Using App", then "Change to Always Allow".',
+  alwaysHintAndroid: 'In the next dialog choose "Allow all the time".',
+};

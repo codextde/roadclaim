@@ -49,6 +49,7 @@ export type DriveSummary = DriveMetrics & {
   preview: [number, number][];
   uploaded: boolean;
   territory: { claimed: number; stolen: number; refreshed: number; held: number } | null;
+  sample?: boolean;
 };
 
 export type Drive = DriveSummary & {

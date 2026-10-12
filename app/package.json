@@ -15,9 +15,12 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "typecheck": "tsc --noEmit",
+    "icons": "node scripts/icons.mjs",
     "check": "tsc --noEmit && bun test scripts"
   },
   "dependencies": {
+    "@expo-google-fonts/barlow-semi-condensed": "^0.4.1",
+    "@expo-google-fonts/geist": "^0.4.2",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/material-symbols": "^0.4.50",
     "@expo/ui": "~57.0.23",
@@ -68,6 +71,7 @@
   "devDependencies": {
     "@types/bun": "^1.4.2",
     "@types/react": "^19.3.0",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2"
   }
 }
