@@ -1,0 +1,13 @@
+{
+  "name": "roadclaim-site",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/i/*", "/.well-known/*"]
+  },
+  "routes": [{ "pattern": "roadclaim.codext.de", "custom_domain": true }]
+}

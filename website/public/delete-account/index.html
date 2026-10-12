@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your account – Roadclaim</title>
+<meta name="description" content="Delete your Roadclaim account in the app or with your recovery key.">
+<link rel="canonical" href="https://roadclaim.codext.de/delete-account/">
+<link rel="alternate" hreflang="en" href="https://roadclaim.codext.de/delete-account/">
+<link rel="alternate" hreflang="de" href="https://roadclaim.codext.de/de/delete-account/">
+<meta name="theme-color" content="#0A0D0C">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/style.css">
+<script src="/assets/delete.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/assets/favicon.svg" alt="" width="32" height="32">Roadclaim</a>
+    <nav class="nav-links" aria-label="Main"><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="https://github.com/codextde/roadclaim">GitHub</a><a class="lang" href="/de/delete-account/" hreflang="de" lang="de">DE</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <article class="doc">
+<h1>Delete your account</h1>
+<p class="meta">You can delete your Roadclaim account at any time. Deletion is permanent and cannot be undone.</p>
+<h2>In the app</h2>
+<p>Open Roadclaim, go to <strong>Profile</strong>, then <strong>Settings</strong>, and tap <strong>Delete account</strong>.</p>
+<h2>Without the app</h2>
+<p>No longer have the app or your phone? Enter your recovery key below. You find it in the app under Profile, Settings, Recovery key.</p>
+<form class="form" id="delete-form" novalidate
+  data-empty="Please enter your recovery key."
+  data-confirm="Please confirm that you want to delete your account."
+  data-working="Deleting your account..."
+  data-done="Your account and all its data have been deleted from our server."
+  data-notfound="We could not find an account for this recovery key. Please check it and try again."
+  data-failed="Something went wrong. Please try again later or email kontakt@codext.de."
+  data-offline="Could not reach the server. Check your connection and try again.">
+  <label for="recoveryKey">Recovery key</label>
+  <input type="text" id="recoveryKey" name="recoveryKey" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+  <label class="check"><input type="checkbox" name="confirm"> I understand that my profile, drive summaries, territory, friends, club ownership, trophies, mods and backups will be deleted permanently.</label>
+  <button class="btn btn-primary" type="submit">Delete account</button>
+  <div class="status" id="delete-status" role="status" aria-live="polite"></div>
+</form>
+<h2>What is deleted</h2>
+<p>Your profile, drive summaries, cells, friendships, club ownership, trophies, AI car mods and cloud backups are removed from our server. Drives stored on your phone stay there until you delete the app. Details in the <a href="/privacy/">privacy policy</a>.</p>
+<p>Lost your recovery key? Email <a href="mailto:kontakt@codext.de">kontakt@codext.de</a> with your username and we will help.</p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Codext GmbH</span>
+    <nav aria-label="Footer"><a href="/">Home</a><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/imprint/">Imprint</a><a href="/delete-account/">Delete account</a><a href="https://github.com/codextde/roadclaim">GitHub</a><a href="/de/delete-account/" hreflang="de" lang="de">Deutsch</a></nav>
+  </div>
+</footer>
+</body>
+</html>

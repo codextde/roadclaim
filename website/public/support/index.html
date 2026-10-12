@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support – Roadclaim</title>
+<meta name="description" content="Roadclaim help: automatic recording, permissions, battery, accuracy, privacy and account deletion. Contact: kontakt@codext.de">
+<link rel="canonical" href="https://roadclaim.codext.de/support/">
+<link rel="alternate" hreflang="en" href="https://roadclaim.codext.de/support/">
+<link rel="alternate" hreflang="de" href="https://roadclaim.codext.de/de/support/">
+<meta name="theme-color" content="#0A0D0C">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/assets/favicon.svg" alt="" width="32" height="32">Roadclaim</a>
+    <nav class="nav-links" aria-label="Main"><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="https://github.com/codextde/roadclaim">GitHub</a><a class="lang" href="/de/support/" hreflang="de" lang="de">DE</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <article class="doc">
+<h1>Support</h1>
+<p class="meta">Answers to the most common questions. Not here? Email <a href="mailto:kontakt@codext.de">kontakt@codext.de</a>.</p>
+<details><summary>How does automatic recording work?</summary><div><p>You never press start. On iPhone, Roadclaim uses motion activity (the same signal the system uses to know you are in a car) plus significant location changes to wake up. On Android it uses the system activity recognition. When driving is detected, precise location recording starts. The drive ends after about 4 minutes below walking pace (adjustable from 2 to 10 minutes in Settings) or when the phone notices you have left the car. A notification asks "Drive finished?" and closes the drive on its own if you ignore it.</p><p>Drives shorter than 500 m or 60 seconds are discarded. You can always start and stop a drive by hand on the home screen.</p></div></details>
+<details><summary>Which permissions do I need?</summary><div><p>For fully automatic recording:</p><ul><li><strong>iPhone:</strong> Settings, Roadclaim, Location: <strong>Always</strong> and <strong>Precise Location</strong> on. Motion &amp; Fitness on. Notifications on.</li><li><strong>Android:</strong> Location: <strong>Allow all the time</strong> and precise location. Physical activity: allowed. Notifications: allowed. Battery: set Roadclaim to <strong>Unrestricted</strong> (some brands call it "No restrictions" or "Don't optimise").</li></ul><p>With "While using the app" only, use manual start and stop.</p></div></details>
+<details><summary>Does it drain my battery?</summary><div><p>While you are not driving, Roadclaim only listens to low-power motion and location signals. Precise GPS runs only during a drive. Like a navigation app, that uses noticeably more power, so a car charger helps on long trips.</p></div></details>
+<details><summary>A drive is missing or started late. What can I do?</summary><div><ul><li>Check that location is set to Always (iPhone) or Allow all the time (Android) and precise location is on.</li><li>Allow motion and fitness or physical activity.</li><li>On Android, turn off battery optimisation for Roadclaim.</li><li>Avoid force-closing the app from the app switcher.</li><li>In very short drives the first few hundred metres can be missed while the phone detects the drive. Start by hand if every metre matters.</li></ul></div></details>
+<details><summary>How accurate are brake presses, turns and lane changes?</summary><div><p>They are computed on your phone from GPS speed and heading, without any extra hardware. They are good estimates, not exact measurements. For best results, keep the phone in a fixed mount or a pocket with a clear view of the sky. Tunnels, parking garages and dense city canyons reduce accuracy; elevation is the least precise GPS value.</p></div></details>
+<details><summary>What does the server know about my drives?</summary><div><p>Your GPS route stays on your phone. For leaderboards and territory, the app uploads totals (distance, duration, counts, elevation, city) and the ids of the roughly 300 m hexagons you passed, never coordinates. With "Keep everything on this device" nothing is uploaded at all. Optional cloud backup, off by default, stores full drives. Details in the <a href="/privacy/">privacy policy</a>.</p></div></details>
+<details><summary>How do I hide from leaderboards?</summary><div><p>Profile, Settings, Privacy: switch on "Hide from leaderboards". Your friends still see you.</p></div></details>
+<details><summary>How do I move to a new phone?</summary><div><p>Copy your recovery key from Settings and keep it somewhere safe. On the new phone, choose "Restore account" in onboarding and paste the key. Your drive files move with cloud backup, if you switched it on.</p></div></details>
+<details><summary>How do I delete my account?</summary><div><p>In the app: Profile, Settings, Delete account. Without the app, use your recovery key on the <a href="/delete-account/">account deletion page</a>.</p></div></details>
+<details><summary>Is it really free?</summary><div><p>Yes. Every feature is free, with no ads and no subscription. Roadclaim is an open source project by Codext GmbH. You can read the code and run your own server: <a href="https://github.com/codextde/roadclaim">github.com/codextde/roadclaim</a>.</p></div></details>
+<details><summary>Is it safe to use while driving?</summary><div><p>Roadclaim needs no interaction while you drive. Never touch your phone at the wheel and always follow the speed limit. No stat is worth your safety.</p></div></details>
+<h2>Contact</h2>
+<p>Questions, feedback or found a bug? Email <a href="mailto:kontakt@codext.de">kontakt@codext.de</a> or open an issue on <a href="https://github.com/codextde/roadclaim/issues">GitHub</a>.</p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Codext GmbH</span>
+    <nav aria-label="Footer"><a href="/">Home</a><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/imprint/">Imprint</a><a href="/delete-account/">Delete account</a><a href="https://github.com/codextde/roadclaim">GitHub</a><a href="/de/support/" hreflang="de" lang="de">Deutsch</a></nav>
+  </div>
+</footer>
+</body>
+</html>

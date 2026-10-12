@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konto löschen – Roadclaim</title>
+<meta name="description" content="Lösche dein Roadclaim-Konto in der App oder mit deinem Wiederherstellungsschlüssel.">
+<link rel="canonical" href="https://roadclaim.codext.de/de/delete-account/">
+<link rel="alternate" hreflang="en" href="https://roadclaim.codext.de/delete-account/">
+<link rel="alternate" hreflang="de" href="https://roadclaim.codext.de/de/delete-account/">
+<meta name="theme-color" content="#0A0D0C">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/style.css">
+<script src="/assets/delete.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Zum Inhalt springen</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/de/"><img src="/assets/favicon.svg" alt="" width="32" height="32">Roadclaim</a>
+    <nav class="nav-links" aria-label="Hauptnavigation"><a href="/de/support/">Hilfe</a><a href="/de/privacy/">Datenschutz</a><a href="https://github.com/codextde/roadclaim">GitHub</a><a class="lang" href="/delete-account/" hreflang="en" lang="en">EN</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <article class="doc">
+<h1>Konto löschen</h1>
+<p class="meta">Du kannst dein Roadclaim-Konto jederzeit löschen. Die Löschung ist endgültig und kann nicht rückgängig gemacht werden.</p>
+<h2>In der App</h2>
+<p>Öffne Roadclaim, geh zu <strong>Profil</strong>, dann <strong>Einstellungen</strong>, und tippe auf <strong>Konto löschen</strong>.</p>
+<h2>Ohne App</h2>
+<p>Du hast die App oder dein Handy nicht mehr? Gib unten deinen Wiederherstellungsschlüssel ein. Du findest ihn in der App unter Profil, Einstellungen, Wiederherstellungsschlüssel.</p>
+<form class="form" id="delete-form" novalidate
+  data-empty="Bitte gib deinen Wiederherstellungsschlüssel ein."
+  data-confirm="Bitte bestätige, dass du dein Konto löschen möchtest."
+  data-working="Dein Konto wird gelöscht..."
+  data-done="Dein Konto und alle zugehörigen Daten wurden von unserem Server gelöscht."
+  data-notfound="Zu diesem Wiederherstellungsschlüssel haben wir kein Konto gefunden. Bitte prüfe ihn und versuche es erneut."
+  data-failed="Etwas ist schiefgelaufen. Bitte versuche es später erneut oder schreib an kontakt@codext.de."
+  data-offline="Der Server ist nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.">
+  <label for="recoveryKey">Wiederherstellungsschlüssel</label>
+  <input type="text" id="recoveryKey" name="recoveryKey" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+  <label class="check"><input type="checkbox" name="confirm"> Mir ist klar, dass mein Profil, Fahrtsummen, Revier, Freunde, Club-Inhaberschaft, Trophäen, Umbauten und Backups endgültig gelöscht werden.</label>
+  <button class="btn btn-primary" type="submit">Konto löschen</button>
+  <div class="status" id="delete-status" role="status" aria-live="polite"></div>
+</form>
+<h2>Was gelöscht wird</h2>
+<p>Dein Profil, Fahrtsummen, Felder, Freundschaften, Club-Inhaberschaft, Trophäen, KI-Umbauten und Cloud-Backups werden von unserem Server entfernt. Fahrten auf deinem Handy bleiben dort, bis du die App löschst. Details in der <a href="/de/privacy/">Datenschutzerklärung</a>.</p>
+<p>Wiederherstellungsschlüssel verloren? Schreib an <a href="mailto:kontakt@codext.de">kontakt@codext.de</a> mit deinem Benutzernamen, wir helfen dir.</p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Codext GmbH</span>
+    <nav aria-label="Fußzeile"><a href="/de/">Start</a><a href="/de/support/">Hilfe</a><a href="/de/privacy/">Datenschutz</a><a href="/de/terms/">Nutzungsbedingungen</a><a href="/de/imprint/">Impressum</a><a href="/de/delete-account/">Konto löschen</a><a href="https://github.com/codextde/roadclaim">GitHub</a><a href="/delete-account/" hreflang="en" lang="en">English</a></nav>
+  </div>
+</footer>
+</body>
+</html>
