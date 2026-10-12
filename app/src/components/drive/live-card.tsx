@@ -8,7 +8,7 @@ import { Icon } from '@/components/icon';
 import type { Fix } from '@/core/types';
 import { PressableScale } from '@/components/pressable-scale';
 import { Button, IconButton } from '@/components/ui';
-import { discardCurrent, requestPermissions, setAutoDetect, startManual, stopManual, useLiveFixes, usePermissions, useRecorder } from '@/tracking/recorder';
+import { discardCurrent, requestPermissions, setAutoDetect, startManual, stopManual, useAutoDetectIssue, useLiveFixes, usePermissions, useRecorder } from '@/tracking/recorder';
 import { useT } from '@/i18n';
 import { requestAutoDetect } from '@/ui-lib/auto-detect';
 import { brand, fonts, radius, space, type, useColors } from '@/theme';
@@ -139,6 +139,7 @@ export function RecorderHero() {
   const { t } = useT();
   const c = useColors();
   const [busy, setBusy] = useState(false);
+  const issue = useAutoDetectIssue();
 
   const manualReason = state.status === 'idle' ? (!state.autoDetect ? 'off' : perms.location !== 'granted' ? 'permission' : null) : null;
 
@@ -204,6 +205,20 @@ export function RecorderHero() {
           <HeroLabel text={t('drives.hero.autoTitle')} live />
           <Text style={[styles.heroTitle, { color: ON_HERO }]}>{t('drives.hero.autoBody')}</Text>
           <Text style={[type.callout, { color: ON_HERO_2 }]}>{t('drives.hero.autoHint')}</Text>
+          {issue === 'motion' ? (
+            <PressableScale
+              onPress={() => {
+                tap();
+                requestAutoDetect();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('drives.hero.motionIssueAction')}
+              style={styles.issue}>
+              <Icon name="motion" size={15} color={brand.amber} />
+              <Text style={[type.caption, { color: ON_HERO, flex: 1 }]}>{Platform.OS === 'android' ? t('drives.hero.motionIssueAndroid') : t('drives.hero.motionIssueIos')}</Text>
+              <Text style={[type.caption, { color: brand.amber, fontFamily: fonts.semibold }]}>{t('drives.hero.motionIssueAction')}</Text>
+            </PressableScale>
+          ) : null}
           <PressableScale
             onPress={() => {
               tap();
@@ -311,6 +326,7 @@ function MiniStat({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
+  issue: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, paddingVertical: space.sm + 2, borderRadius: 12, backgroundColor: 'rgba(245,158,11,0.12)' },
   hero: {
     borderRadius: radius.xl,
     overflow: 'hidden',

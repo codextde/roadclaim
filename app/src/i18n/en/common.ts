@@ -39,6 +39,12 @@ export const common = {
   permissionPhotos: 'Allow photo access in Settings to save images.',
   openSettings: 'Open Settings',
   confirmDelete: 'Delete for good?',
+  driveTooShort: 'Drive too short to save',
+  driveTooShortBody: 'Drives under 500 m or one minute are not kept.',
+  units: 'Units',
+  unitsHint: 'Distance and speed',
+  metric: 'km · km/h',
+  imperial: 'mi · mph',
   rank: 'Rank',
   season: '{year} Season',
 };

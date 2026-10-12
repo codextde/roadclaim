@@ -5,8 +5,9 @@ import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 import { HexMark } from '@/components/hex';
 import type { IconName } from '@/components/icon-names';
 import { OnboardingFrame, useFlow } from '@/components/onboarding-frame';
-import { Button, Notice, Pill } from '@/components/ui';
+import { Button, Notice, Pill, Segmented } from '@/components/ui';
 import type { Permissions } from '@/core/types';
+import { useSettings } from '@/data/settings';
 import { useT } from '@/i18n';
 import { radius, space, type, useColors, withAlpha } from '@/theme';
 import { failure, success } from '@/ui-lib/haptics';
@@ -63,6 +64,28 @@ function PermissionCard({
           <Button title={action} onPress={onPress} loading={busy} variant={status === 'denied' ? 'secondary' : 'primary'} compact style={{ alignSelf: 'flex-start' }} />
         </View>
       ) : null}
+    </Animated.View>
+  );
+}
+
+function UnitsCard() {
+  const c = useColors();
+  const { t } = useT();
+  const units = useSettings((s) => s.units);
+  return (
+    <Animated.View entering={FadeInDown.delay(240).springify().damping(18)} style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+      <View style={{ gap: 2 }}>
+        <Text style={[type.bodyStrong, { color: c.text }]}>{t('common.units')}</Text>
+        <Text style={[type.caption, { color: c.textSecondary }]}>{t('common.unitsHint')}</Text>
+      </View>
+      <Segmented
+        options={[
+          { value: 'metric', label: t('common.metric') },
+          { value: 'imperial', label: t('common.imperial') },
+        ]}
+        value={units}
+        onChange={(v) => useSettings.getState().set({ units: v })}
+      />
     </Animated.View>
   );
 }
@@ -164,6 +187,7 @@ export default function PermissionsStep() {
           onPress={() => askOrSettings('notifications')}
           busy={busy === 'notifications'}
         />
+        <UnitsCard />
       </View>
     </OnboardingFrame>
   );

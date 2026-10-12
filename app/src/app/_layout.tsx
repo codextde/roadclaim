@@ -7,12 +7,16 @@ import { useEffect, useState } from 'react';
 import { Appearance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { showToast, ToastHost } from '@/components/toast';
+
 import { useSettings } from '@/data/settings';
-import { useT } from '@/i18n';
+import { t, useT } from '@/i18n';
+import * as recorder from '@/tracking/recorder';
 import { onDriveFinished, useDriveNotifications } from '@/tracking/recorder';
 import { useColors, useIsDark } from '@/theme';
 import { iconFonts, textFonts } from '@/ui-lib/fonts';
 import { pushedHeader, sheetOptions } from '@/ui-lib/nav';
+import { useAppStatusBarStyle } from '@/ui-lib/status-bar';
 import { SCREENSHOTS, useScreenshotRoute } from '@/ui-lib/screenshot-driver';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -34,7 +38,13 @@ function useDriveFinishedRouting(enabled: boolean) {
   useDriveNotifications();
   useEffect(() => {
     if (!enabled) return;
-    return onDriveFinished((id: string) => router.push(`/drive/${id}?fresh=1`));
+    const offFinished = onDriveFinished((id: string) => router.push(`/drive/${id}?fresh=1`));
+    const onDiscarded = (recorder as { onDriveDiscarded?: (cb: () => void) => (() => void) | void }).onDriveDiscarded;
+    const offDiscarded = onDiscarded?.(() => showToast(t('common.driveTooShort'), { body: t('common.driveTooShortBody'), icon: 'info' }));
+    return () => {
+      offFinished();
+      if (typeof offDiscarded === 'function') offDiscarded();
+    };
   }, [enabled]);
 }
 
@@ -42,6 +52,7 @@ function Navigator() {
   const onboarded = useSettings((s) => s.onboarded);
   const c = useColors();
   const dark = useIsDark();
+  const statusBar = useAppStatusBarStyle();
   const { t } = useT();
   useThemePreference();
   useDriveFinishedRouting(onboarded);
@@ -62,7 +73,7 @@ function Navigator() {
 
   return (
     <ThemeProvider value={theme}>
-      <StatusBar style={dark ? 'light' : 'dark'} />
+      <StatusBar style={statusBar} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.background } }}>
         <Stack.Protected guard={onboarded}>
           <Stack.Screen name="(tabs)" />
@@ -123,6 +134,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.background }}>
       <Navigator />
+      <ToastHost />
     </GestureHandlerRootView>
   );
 }

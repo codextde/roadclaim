@@ -41,6 +41,12 @@ export const common: Dict['common'] = {
   permissionPhotos: 'Erlaube den Fotozugriff in den Einstellungen, um Bilder zu sichern.',
   openSettings: 'Einstellungen öffnen',
   confirmDelete: 'Endgültig löschen?',
+  driveTooShort: 'Fahrt zu kurz zum Speichern',
+  driveTooShortBody: 'Fahrten unter 500 m oder einer Minute werden nicht behalten.',
+  units: 'Einheiten',
+  unitsHint: 'Strecke und Tempo',
+  metric: 'km · km/h',
+  imperial: 'mi · mph',
   rank: 'Platz',
   season: 'Saison {year}',
 };

@@ -4,7 +4,6 @@ import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
@@ -22,6 +21,7 @@ import { brand, fonts, radius, space, type } from '@/theme';
 import { dateLabel } from '@/ui-lib/date';
 import { failure, success, tap } from '@/ui-lib/haptics';
 import { remote, useMods, type Mod } from '@/ui-lib/remote';
+import { useStatusBarStyle } from '@/ui-lib/status-bar';
 
 const WHITE = '#FFFFFF';
 const WHITE_2 = 'rgba(255,255,255,0.62)';
@@ -33,6 +33,7 @@ async function download(mod: Pick<Mod, 'id' | 'imageUrl'>) {
 }
 
 export default function ModViewer() {
+  useStatusBarStyle('light');
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const styleLabel = useStyleLabel();
@@ -100,7 +101,6 @@ export default function ModViewer() {
 
   return (
     <View style={styles.root}>
-      <StatusBar style="light" />
       {mod ? (
         <Pressable
           style={StyleSheet.absoluteFill}

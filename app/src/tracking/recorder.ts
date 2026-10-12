@@ -28,6 +28,8 @@ const FALLBACK_START_MPS = 20 / 3.6;
 const OFF_AUTOMOTIVE_MS = 3 * 60_000;
 const MIN_DISTANCE_M = 500;
 const MIN_DURATION_S = 60;
+const MIN_MANUAL_DISTANCE_M = 150;
+const MIN_MANUAL_DURATION_S = 20;
 const MAX_DRIVE_MS = 12 * 3600_000;
 const ANCHOR_RADIUS_M = 100;
 const FLUSH_EVERY = 10;
@@ -65,6 +67,7 @@ const useStore = create<Store>(() => ({
 }));
 
 let buffer: Fix[] = [];
+let recent: Fix[] = [];
 
 function persistLive(live: Live | null) {
   useStore.setState({ live });
@@ -98,6 +101,18 @@ export function onDriveFinished(cb: (driveId: string) => void) {
   finishedListeners.add(cb);
   return () => {
     finishedListeners.delete(cb);
+  };
+}
+
+export type DiscardedDrive = { driveId: string; distanceM: number; durationS: number; manual: boolean };
+
+const discardedListeners = new Set<(drive: DiscardedDrive) => void>();
+
+/** Fires when a finished recording was too short to keep (auto: 500 m / 60 s, manual: 150 m / 20 s). */
+export function onDriveDiscarded(cb: (drive: DiscardedDrive) => void) {
+  discardedListeners.add(cb);
+  return () => {
+    discardedListeners.delete(cb);
   };
 }
 
@@ -156,7 +171,11 @@ export async function ingest(locations: Location.LocationObject[]) {
       if (moved) next.lastMoveAt = Math.max(next.lastMoveAt, f.t);
       next.anchor = { lat: f.lat, lng: f.lng };
     }
-    next.speedMps = reported ?? positional ?? 0;
+    recent = [...recent.slice(-2), f];
+    const first = recent[0];
+    const span = (f.t - first.t) / 1000;
+    const smoothed = recent.length > 1 && span > 0 ? haversine(first, f) / span : (positional ?? 0);
+    next.speedMps = reported != null && (reported > 0 || smoothed <= 3) ? reported : smoothed;
     next.last = f;
     shown.push(f);
   }
@@ -268,6 +287,7 @@ async function doStart(manual: boolean, resume?: Resume) {
     offAutomotiveSince: null,
   };
   buffer = [];
+  recent = [];
   if (resume) appendTrack(live.driveId, resume.fixes);
   persistLive(live);
   useStore.setState({ status: 'recording', fixes: resume?.fixes ?? [] });
@@ -330,7 +350,10 @@ async function doFinish(): Promise<string | null> {
   flush();
   const fixes = trimStationary(readTrack(live.driveId));
   const { metrics, events } = computeMetrics(fixes);
-  if (metrics.distanceM < MIN_DISTANCE_M || metrics.durationS < MIN_DURATION_S) {
+  const [minM, minS] = live.manual ? [MIN_MANUAL_DISTANCE_M, MIN_MANUAL_DURATION_S] : [MIN_DISTANCE_M, MIN_DURATION_S];
+  if (metrics.distanceM < minM || metrics.durationS < minS) {
+    const info = { driveId: live.driveId, distanceM: metrics.distanceM, durationS: metrics.durationS, manual: live.manual };
+    discardedListeners.forEach((cb) => cb(info));
     deleteTrack(live.driveId);
     persistLive(null);
     useStore.setState({ status: 'idle', fixes: [] });
@@ -366,6 +389,7 @@ async function doFinish(): Promise<string | null> {
 }
 
 export async function startManual(): Promise<void> {
+  await ensureAndroidNotifications();
   await startRecording(true);
 }
 
@@ -489,17 +513,13 @@ async function readPermissions(): Promise<Permissions> {
     Notifications.getPermissionsAsync(),
     hasModule() ? DriveDetect!.getPermissionStatus().catch(() => null) : Promise.resolve(null),
   ]);
-  const location: Permissions['location'] = fg.granted
-    ? bg?.granted
-      ? 'granted'
-      : 'foreground'
-    : fg.status === 'undetermined'
-      ? 'undetermined'
-      : 'denied';
+  // Android reports a never-asked permission as denied with canAskAgain; only a final denial is 'denied'.
+  const askable = (p: { status: string; canAskAgain?: boolean } | null) => !p || p.status === 'undetermined' || p.canAskAgain !== false;
+  const location: Permissions['location'] = fg.granted ? (bg?.granted ? 'granted' : 'foreground') : askable(fg) ? 'undetermined' : 'denied';
   return {
     location,
-    motion: hasModule() ? (motion?.status ?? 'undetermined') : 'unavailable',
-    notifications: notif.granted ? 'granted' : notif.status === 'undetermined' ? 'undetermined' : 'denied',
+    motion: hasModule() ? (motion?.status === 'granted' ? 'granted' : askable(motion) ? 'undetermined' : 'denied') : 'unavailable',
+    notifications: notif.granted ? 'granted' : askable(notif) ? 'undetermined' : 'denied',
   };
 }
 
@@ -541,8 +561,18 @@ async function doArm() {
   else await stopWatch();
 }
 
+// The Android recording notification is only visible with POST_NOTIFICATIONS (Android 13+).
+async function ensureAndroidNotifications() {
+  if (Platform.OS !== 'android' || Number(Platform.Version) < 33) return;
+  const current = await Notifications.getPermissionsAsync().catch(() => null);
+  if (!current || current.granted || current.canAskAgain === false) return;
+  await Notifications.requestPermissionsAsync().catch(() => undefined);
+  await setupNotifications();
+}
+
 export async function setAutoDetect(on: boolean): Promise<void> {
   useSettings.getState().set({ autoDetect: on });
+  if (on) await ensureAndroidNotifications();
   await armDetection();
 }
 
@@ -570,6 +600,7 @@ export async function restoreRecording() {
   }
   if (useStore.getState().live?.driveId !== live.driveId) {
     buffer = [];
+    recent = [];
     useStore.setState({
       status: 'recording',
       live: { ...live, anchor: live.anchor ?? null },

@@ -36,6 +36,8 @@ Two people build the app in parallel. The **core** owner writes everything below
 - `useDriveNotifications()`: call once in the root layout; routes a notification tap that cold-started the app (warm taps are routed by core). The notification's "Still driving" action reopens the drive (`resumeDrive(id)`), "Done" just dismisses it.
 - Permissions: `location: 'granted'` means "Always"; `'foreground'` means only while using the app (manual recording works, auto-detect does not).
 - Core never asks for a permission on its own: at launch it only re-arms detection when `onboarded` is true and the permissions are already granted. Call `requestPermissions(...)` / `setAutoDetect(true)` after the user accepts the disclosure.
+- `onDriveDiscarded(cb: (d: { driveId, distanceM, durationS, manual }) => void): () => void` fires when a stopped recording was too short to keep (auto: under 500 m or 60 s, manual: under 150 m or 20 s), e.g. for a "Drive too short to save" toast.
+- On Android 13+ `startManual()` and `setAutoDetect(true)` also ask for notifications if never asked, so the recording notification is visible. A permission Android reports as denied but still askable shows as `'undetermined'`.
 - `useAutoDetectIssue(): 'location-always' | 'motion' | null`: why automatic recording cannot work right now (Android needs "Physical activity" to start in the background), for a hint row; null when auto-detect is off or everything is granted.
 
 ## `@/api` (server client, see docs/API.md)

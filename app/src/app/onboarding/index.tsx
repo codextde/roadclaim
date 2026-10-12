@@ -12,10 +12,12 @@ import { useSettings } from '@/data/settings';
 import { useT } from '@/i18n';
 import { brand, fonts, radius, space, type, useColors, useIsDark, withAlpha } from '@/theme';
 import { impact } from '@/ui-lib/haptics';
+import { useStatusBarStyle } from '@/ui-lib/status-bar';
 
 const enter = (i: number) => FadeInDown.springify().damping(18).delay(120 + i * 70);
 
 export default function Welcome() {
+  useStatusBarStyle('light');
   const c = useColors();
   const dark = useIsDark();
   const { t } = useT();
