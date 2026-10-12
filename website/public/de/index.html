@@ -240,7 +240,7 @@
       <pre><code>git clone https://github.com/codextde/roadclaim
 cd roadclaim
 SERVICE_PASSWORD_POSTGRES=change-me SERVICE_PASSWORD_64_SECRET=$(openssl rand -hex 32) \
-  docker compose -f deploy/coolify/docker-compose.yml up -d --build</code></pre>
+  docker compose -f deploy/coolify/docker-compose.yml -f deploy/coolify/docker-compose.local.yml up -d --build</code></pre>
     </div>
   </section>
 

@@ -70,7 +70,7 @@ Run your own Roadclaim backend for your group or club. The server ships as a Doc
 git clone https://github.com/codextde/roadclaim
 cd roadclaim
 SERVICE_PASSWORD_POSTGRES=change-me SERVICE_PASSWORD_64_SECRET=$(openssl rand -hex 32) \
-  docker compose -f deploy/coolify/docker-compose.yml up -d --build
+  docker compose -f deploy/coolify/docker-compose.yml -f deploy/coolify/docker-compose.local.yml up -d --build
 ```
 
 Environment variables, migrations, backups and the optional `GEMINI_API_KEY` for AI mods are described in [server/README.md](server/README.md). Point the app at your server with `EXPO_PUBLIC_API_URL`.
