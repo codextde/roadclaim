@@ -7,7 +7,7 @@ import type { Sql } from "../db";
 import { ApiError, assertClean, forbidden, hexColor, idParam, jsonBody, notFound, parse, type Ctx, type Env } from "../http";
 import { periodStart } from "../stats";
 import { evaluateTrophies } from "../trophies";
-import { publicUsers } from "../users";
+import { blockedWith, publicUsers } from "../users";
 
 const clubFields = {
   name: z.string().trim().min(2).max(40),
@@ -87,17 +87,27 @@ export const clubRoutes = new Hono<Env>()
   .get("/:id", async (c) => {
     const { sql } = c.var.deps;
     const id = idParam(c);
-    const club = await clubOr404(sql, id, c.var.user.id);
+    const me = c.var.user.id;
+    const club = await clubOr404(sql, id, me);
+    if (!club.isPublic && club.inviteCode === undefined) throw notFound("Club");
     const rows = await sql`
-      select m.user_id, m.role, coalesce(sum(d.distance_m), 0)::float8 as distance_m
-      from club_members m left join drives d on d.user_id = m.user_id and d.started_at >= ${periodStart("season")}
-      where m.club_id = ${id} group by m.user_id, m.role, m.joined_at
+      select m.user_id, m.role, u.local_only, u.hide_from_leaderboards,
+        (m.user_id = ${me} or exists(select 1 from friendships f where f.user_id = ${me} and f.friend_id = m.user_id)) as close,
+        coalesce(sum(d.distance_m), 0)::float8 as distance_m
+      from club_members m join users u on u.id = m.user_id
+      left join drives d on d.user_id = m.user_id and d.started_at >= ${periodStart("season")}
+      where m.club_id = ${id} and m.user_id not in (${blockedWith(sql, me)})
+      group by m.user_id, m.role, m.joined_at, u.local_only, u.hide_from_leaderboards
       order by distance_m desc, m.joined_at`;
-    const users = await publicUsers(sql, rows.map((r: { user_id: string }) => r.user_id));
-    return c.json({
-      club,
-      members: rows.map((r: any) => ({ user: users.get(r.user_id), role: r.role, distanceM: r.distance_m })),
-    });
+    const shown = rows.filter((r: any) => r.close || !r.local_only);
+    const users = await publicUsers(sql, shown.map((r: { user_id: string }) => r.user_id));
+    const members = shown.map((r: any) => ({
+      user: users.get(r.user_id),
+      role: r.role,
+      distanceM: (r.close || !r.hide_from_leaderboards ? r.distance_m : null) as number | null,
+    }));
+    members.sort((x: { distanceM: number | null }, y: { distanceM: number | null }) => (y.distanceM ?? -1) - (x.distanceM ?? -1));
+    return c.json({ club, members });
   })
   .post("/:id/join", async (c) => {
     const id = idParam(c);

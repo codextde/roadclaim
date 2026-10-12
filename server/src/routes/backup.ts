@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { requireAuth } from "../auth";
-import { ApiError, badRequest, forbidden, notFound, type Ctx, type Env } from "../http";
+import { ApiError, badRequest, enforceLimit, forbidden, notFound, type Ctx, type Env } from "../http";
 
 export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 
@@ -14,6 +14,7 @@ export const backupRoutes = new Hono<Env>()
   .use("*", requireAuth)
   .put("/drives/:id", async (c) => {
     if (!c.var.user.cloud_backup) throw forbidden("backup_disabled", "Cloud backup is turned off in privacy settings");
+    enforceLimit(c, "backup", c.var.user.id);
     const id = driveId(c);
     const raw = await c.req.text();
     const size = Buffer.byteLength(raw);
@@ -23,9 +24,20 @@ export const backupRoutes = new Hono<Env>()
     } catch {
       throw badRequest("Body must be valid JSON");
     }
-    await c.var.deps.sql`
-      insert into backups (user_id, drive_id, data, size) values (${c.var.user.id}, ${id}, ${raw}, ${size})
-      on conflict (user_id, drive_id) do update set data = excluded.data, size = excluded.size, updated_at = now()`;
+    const { sql, config } = c.var.deps;
+    const me = c.var.user.id;
+    await sql.begin(async (tx) => {
+      await tx`select pg_advisory_xact_lock(hashtext(${`backup:${me}`}))`;
+      const [usage] = await tx`
+        select count(*)::int as n, coalesce(sum(size), 0)::float8 as bytes
+        from backups where user_id = ${me} and drive_id <> ${id}`;
+      if (usage.n >= config.backupMaxCount || usage.bytes + size > config.backupMaxBytes) {
+        throw new ApiError(413, "quota_exceeded", "Your cloud backup is full, delete old backups first");
+      }
+      await tx`
+        insert into backups (user_id, drive_id, data, size) values (${me}, ${id}, ${raw}, ${size})
+        on conflict (user_id, drive_id) do update set data = excluded.data, size = excluded.size, updated_at = now()`;
+    });
     return c.json({ ok: true });
   })
   .get("/drives", async (c) => {

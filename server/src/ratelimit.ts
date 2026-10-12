@@ -6,6 +6,7 @@ export const RATE_RULES = {
   signup: { limit: 20, windowMs: 60 * 60_000 },
   recovery: { limit: 30, windowMs: 60 * 60_000 },
   upload: { limit: 120, windowMs: 60 * 60_000 },
+  backup: { limit: 600, windowMs: 60 * 60_000 },
   ip: { limit: 600, windowMs: 60_000 },
   user: { limit: 300, windowMs: 60_000 },
 } satisfies Record<string, RateRule>;

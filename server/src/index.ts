@@ -2,10 +2,13 @@ import { createApp } from "./app";
 import { loadConfig } from "./config";
 import { connect, migrate } from "./db";
 import { log } from "./log";
+import { backfillParents } from "./territory";
 
 const config = loadConfig();
 const sql = connect(config.databaseUrl);
 await migrate(sql);
+const backfilled = await backfillParents(sql);
+if (backfilled) log("info", "cell parents backfilled", { cells: backfilled });
 
 const app = createApp({ sql, config });
 const server = Bun.serve({

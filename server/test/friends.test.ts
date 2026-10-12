@@ -99,7 +99,7 @@ describe("blocks and reports", () => {
     expect(await friendIds(a.token)).toEqual([]);
     expect((await t.req("GET", "/v1/blocks", { token: a.token })).json.items.map((u: any) => u.id)).toEqual([b.id]);
     expect((await t.req("GET", "/v1/users/search?q=blocked_", { token: a.token })).json.items).toEqual([]);
-    expect((await t.req("GET", "/v1/users/search?q=blocker_", { token: b.token })).json.items).toHaveLength(1);
+    expect((await t.req("GET", "/v1/users/search?q=blocker_", { token: b.token })).json.items).toEqual([]);
 
     const req = await t.req("POST", "/v1/friends/requests", { token: b.token, body: { userId: a.id } });
     expect(req.status).toBe(403);

@@ -68,7 +68,7 @@ describe("me", () => {
     expect(old.status).toBe(201);
     await t.sql`update drives set started_at = now() - interval '400 days' where distance_m = 5000 and user_id = ${u.id}`;
     const s = (await t.req("GET", "/v1/me/stats?period=season", { token: u.token })).json;
-    expect(s).toMatchObject({ distanceM: 40_000, drives: 2, longestM: 30_000, cellsHeld: 14, cellsEver: 14, countries: 2, durationS: 3600 });
+    expect(s).toMatchObject({ distanceM: 40_000, drives: 2, longestM: 30_000, cellsHeld: 14, cellsEver: 14, countries: 2, durationS: 2500 });
     expect(s.activeDays).toBeGreaterThanOrEqual(1);
     expect(s.trophies).toBeGreaterThan(0);
     expect((await t.req("GET", "/v1/me/stats?period=today", { token: u.token })).json.distanceM).toBeGreaterThanOrEqual(0);

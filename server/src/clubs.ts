@@ -17,7 +17,8 @@ export async function loadClubs(sql: Sql, ids: string[], viewerId: string | null
   const rows = await sql`
     select c.*,
       (select count(*) from club_members m where m.club_id = c.id)::int as member_count,
-      (select count(*) from cells x join club_members m on m.user_id = x.owner_id where m.club_id = c.id)::int as cells_held,
+      (select count(*) from cells x join club_members m on m.user_id = x.owner_id join users u on u.id = x.owner_id
+        where m.club_id = c.id and u.local_only = false)::int as cells_held,
       exists(select 1 from club_members m where m.club_id = c.id and m.user_id = ${viewerId}) as is_member
     from clubs c where c.id in ${sql([...new Set(ids)])}`;
   return new Map(

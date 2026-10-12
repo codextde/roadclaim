@@ -121,7 +121,9 @@ describe("territory", async () => {
     expect(r.entries.map((e: any) => [e.user.id, e.value])).toEqual([[a.id, 12]]);
     const stealers = (await t.req("GET", `/v1/territory/season?board=stealers&month=${month(past)}`, { token: a.token })).json;
     expect(stealers.entries).toEqual([]);
-    const future = (await t.req("GET", `/v1/territory/season?board=overall&month=${new Date().getUTCFullYear() + 1}-01`, { token: a.token })).json;
-    expect(future.entries).toEqual([]);
+    const future = await t.req("GET", `/v1/territory/season?board=overall&month=${new Date().getUTCFullYear() + 1}-01`, { token: a.token });
+    expect(future.status).toBe(400);
+    expect(future.json.error.code).toBe("invalid_month");
+    expect((await t.req("GET", "/v1/territory/season?board=overall&month=2019-12", { token: a.token })).status).toBe(400);
   });
 });

@@ -96,6 +96,7 @@ describe("leaderboards", async () => {
     expect(world.entries.map((e) => e.user.id)).not.toContain(b.id);
     const own = await board(b.token, "metric=distance&scope=world&period=season");
     expect(own.me).toBeNull();
+    expect((await t.sql`select count(*)::int as n from cells where owner_id = ${b.id}`)[0].n).toBe(0);
     await t.req("PATCH", "/v1/me", { token: b.token, body: { privacy: { localOnly: false } } });
   });
 
@@ -134,7 +135,7 @@ describe("leaderboards", async () => {
     expect(clubs.entries[0].club.inviteCode).toBeDefined();
     expect(clubs.entries[1].club.inviteCode).toBeUndefined();
     const area = (await t.req("GET", "/v1/leaderboards/clubs?metric=area&period=season", { token: a.token })).json;
-    expect(area.entries.map((e: any) => [e.club.name, e.value])).toEqual([["Isar Crew", 33]]);
+    expect(area.entries.map((e: any) => [e.club.name, e.value])).toEqual([["Isar Crew", 14]]);
   });
 
   test("trophies metric counts tiers earned in the period", async () => {

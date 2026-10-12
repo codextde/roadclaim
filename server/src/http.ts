@@ -20,9 +20,10 @@ export type Deps = {
   config: Config;
   generateImage: ImageGenerator | null;
   limiter: RateLimiter;
+  boardCache: Map<string, { expires: number; value: unknown }>;
 };
 
-export type Env = { Variables: { user: AuthUser; deps: Deps } };
+export type Env = { Variables: { user: AuthUser; tokenHash: string; deps: Deps } };
 export type Ctx = Context<Env>;
 
 export class ApiError extends Error {
@@ -92,6 +93,18 @@ export function clientIp(c: Ctx): string {
   }
   const server = (c.env as { server?: { requestIP(r: Request): { address: string } | null } } | undefined)?.server;
   return server?.requestIP(c.req.raw)?.address ?? "unknown";
+}
+
+export function ipRateKey(ip: string): string {
+  const addr = ip.split("%")[0]!.toLowerCase();
+  if (!addr.includes(":")) return addr;
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(addr);
+  if (mapped) return mapped[1]!;
+  const [head = "", tail] = addr.split("::");
+  const left = head.split(":").filter(Boolean);
+  const right = tail === undefined ? [] : tail.split(":").filter(Boolean);
+  const groups = tail === undefined ? left : [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return `${groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16)).join(":")}::/64`;
 }
 
 export function publicOrigin(c: Ctx): string {

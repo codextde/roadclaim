@@ -1,7 +1,39 @@
-import { cellToLatLng, getResolution, isValidCell } from "h3-js";
+import { cellToLatLng, cellToParent, getResolution, gridDisk, isValidCell, latLngToCell, polygonToCells } from "h3-js";
 import type { Sql } from "./db";
 
 export const H3_RESOLUTION = 9;
+export const PARENT_RES = 5;
+
+export function parentsForBbox(minLat: number, minLng: number, maxLat: number, maxLng: number): string[] {
+  const ring: [number, number][] = [
+    [minLat, minLng],
+    [minLat, maxLng],
+    [maxLat, maxLng],
+    [maxLat, minLng],
+  ];
+  const seeds = new Set(polygonToCells(ring, PARENT_RES));
+  for (const [lat, lng] of [...ring, [(minLat + maxLat) / 2, (minLng + maxLng) / 2] as [number, number]]) {
+    seeds.add(latLngToCell(lat, lng, PARENT_RES));
+  }
+  const out = new Set<string>();
+  for (const s of seeds) for (const n of gridDisk(s, 1)) out.add(n);
+  return [...out];
+}
+
+export async function backfillParents(sql: Sql): Promise<number> {
+  let total = 0;
+  for (;;) {
+    const rows: { cell: string }[] = await sql`select cell from cells where parent5 is null limit 5000`;
+    if (!rows.length) return total;
+    const cells = rows.map((r) => r.cell);
+    await sql`
+      update cells c set parent5 = t.parent5
+      from unnest(${sql.array(cells, "TEXT")}::text[], ${sql.array(cells.map((c) => cellToParent(c, PARENT_RES)), "TEXT")}::text[])
+        as t(cell, parent5)
+      where c.cell = t.cell`;
+    total += rows.length;
+  }
+}
 
 export type TerritoryResult = { claimed: number; stolen: number; refreshed: number; held: number };
 
@@ -35,10 +67,11 @@ export async function claimCells(tx: Sql, userId: string, cells: string[], at: D
     const centers = unique.map((c) => cellToLatLng(c));
     const [membership] = await tx`select club_id from club_members where user_id = ${userId}`;
     await tx`
-      insert into cells (cell, owner_id, club_id, claimed_at, refreshed_at, lat, lng)
-      select t.cell, ${userId}, ${membership?.club_id ?? null}, ${at}, ${at}, t.lat, t.lng
+      insert into cells (cell, owner_id, club_id, claimed_at, refreshed_at, lat, lng, parent5)
+      select t.cell, ${userId}, ${membership?.club_id ?? null}, ${at}, ${at}, t.lat, t.lng, t.parent5
       from unnest(${cellArr}::text[], ${tx.array(centers.map((p) => p[0]), "FLOAT8")}::float8[],
-                  ${tx.array(centers.map((p) => p[1]), "FLOAT8")}::float8[]) as t(cell, lat, lng)
+                  ${tx.array(centers.map((p) => p[1]), "FLOAT8")}::float8[],
+                  ${tx.array(unique.map((c) => cellToParent(c, PARENT_RES)), "TEXT")}::text[]) as t(cell, lat, lng, parent5)
       on conflict (cell) do update set
         owner_id = excluded.owner_id,
         club_id = excluded.club_id,

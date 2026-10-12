@@ -20,8 +20,7 @@ describe("clubs", () => {
     const blocked = await t.req("POST", `/v1/clubs/${r.json.id}/join`, { token: b.token });
     expect(blocked.status).toBe(403);
     expect(blocked.json.error.code).toBe("private_club");
-    const view = (await t.req("GET", `/v1/clubs/${r.json.id}`, { token: b.token })).json;
-    expect(view.club.inviteCode).toBeUndefined();
+    expect((await t.req("GET", `/v1/clubs/${r.json.id}`, { token: b.token })).status).toBe(404);
     const joined = await t.req("POST", "/v1/clubs/join", { token: b.token, body: { code: r.json.inviteCode.toLowerCase() } });
     expect(joined.json).toMatchObject({ id: r.json.id, memberCount: 2 });
     expect(joined.json.inviteCode).toBe(r.json.inviteCode);

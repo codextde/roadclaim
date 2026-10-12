@@ -36,7 +36,7 @@ export const meRoutes = new Hono<Env>()
   .get("/", async (c) => c.json(await loadMe(c.var.deps.sql, c.var.user.id)))
   .patch("/", async (c) => {
     const p = await jsonBody(c, patchSchema);
-    assertClean(p.username, p.displayName);
+    assertClean(p.username, p.displayName, p.car?.label, p.car?.color, p.homeCity);
     const { sql } = c.var.deps;
     const id = c.var.user.id;
     const cols: Record<string, unknown> = {};
@@ -54,6 +54,7 @@ export const meRoutes = new Hono<Env>()
         await sql.begin(async (tx) => {
           await tx`update users set ${tx(cols)} where id = ${id}`;
           if (p.privacy?.cloudBackup === false) await tx`delete from backups where user_id = ${id}`;
+          if (p.privacy?.localOnly === true) await tx`delete from cells where owner_id = ${id}`;
         });
       } catch (err) {
         if (isUniqueViolation(err, "users_username_key")) throw new ApiError(409, "username_taken", "This username is taken");

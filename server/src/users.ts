@@ -82,3 +82,20 @@ export async function areFriends(sql: Sql, a: string, b: string): Promise<boolea
   const [r] = await sql`select 1 from friendships where user_id = ${a} and friend_id = ${b}`;
   return !!r;
 }
+
+export function blockedWith(sql: Sql, me: string) {
+  return sql`select blocked_id from blocks where blocker_id = ${me} union all select blocker_id from blocks where blocked_id = ${me}`;
+}
+
+export async function blockedSet(sql: Sql, me: string): Promise<Set<string>> {
+  const rows = await blockedWith(sql, me);
+  return new Set(rows.map((r: { blocked_id: string }) => r.blocked_id));
+}
+
+export async function visibleTo(sql: Sql, viewer: string, target: string): Promise<boolean> {
+  if (viewer === target) return true;
+  const [r] = await sql`
+    select u.local_only, exists(select 1 from (${blockedWith(sql, viewer)}) b where b.blocked_id = u.id) as blocked
+    from users u where u.id = ${target}`;
+  return !!r && !r.local_only && !r.blocked;
+}

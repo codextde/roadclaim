@@ -9,6 +9,10 @@ export type Config = {
   publicUrl: string | null;
   corsOrigins: string[];
   trustProxy: boolean;
+  backupMaxCount: number;
+  backupMaxBytes: number;
+  boardCacheMs: number;
+  seasonStartMonth: string;
 };
 
 function normalizeUrl(value: string | undefined): string | null {
@@ -41,5 +45,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       .map((s) => s.trim())
       .filter(Boolean),
     trustProxy: env.TRUST_PROXY !== "0" && env.TRUST_PROXY !== "false",
+    backupMaxCount: 2000,
+    backupMaxBytes: 500 * 1024 * 1024,
+    boardCacheMs: 60_000,
+    seasonStartMonth: "2026-10",
   };
 }

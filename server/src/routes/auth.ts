@@ -5,7 +5,7 @@ import { issueToken, requireAuth } from "../auth";
 import { deleteAccount } from "../clubs";
 import { decrypt, encrypt, hashRecoveryKey, newRecoveryKey, randomCode } from "../crypto";
 import { isUniqueViolation } from "../db";
-import { ApiError, clientIp, enforceLimit, jsonBody, type Ctx, type Env } from "../http";
+import { ApiError, clientIp, enforceLimit, ipRateKey, jsonBody, type Ctx, type Env } from "../http";
 import { loadMe } from "../users";
 
 export const AVATAR_COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#14B8A6", "#F97316", "#6366F1", "#84CC16"];
@@ -17,7 +17,7 @@ const deviceSchema = z.object({
 const recoverySchema = z.object({ recoveryKey: z.string().min(16).max(64) });
 
 async function findByRecovery(c: Ctx, key: string): Promise<string> {
-  enforceLimit(c, "recovery", clientIp(c));
+  enforceLimit(c, "recovery", ipRateKey(clientIp(c)));
   const hash = hashRecoveryKey(key);
   const [row] = hash ? await c.var.deps.sql`select id from users where recovery_hash = ${hash}` : [];
   if (!row) throw new ApiError(404, "invalid_recovery_key", "No account matches this recovery key");
@@ -26,14 +26,13 @@ async function findByRecovery(c: Ctx, key: string): Promise<string> {
 
 export const authRoutes = new Hono<Env>()
   .post("/device", async (c) => {
-    enforceLimit(c, "signup", clientIp(c));
+    enforceLimit(c, "signup", ipRateKey(clientIp(c)));
     const body = await jsonBody(c, deviceSchema);
     const { sql, config } = c.var.deps;
     const recoveryKey = newRecoveryKey();
     let userId: string | null = null;
-    for (let attempt = 0; attempt < 40 && !userId; attempt++) {
-      const digits = attempt < 15 ? 4 : attempt < 30 ? 5 : 6;
-      const number = randomInt(10 ** (digits - 1), 10 ** digits);
+    for (let attempt = 0; attempt < 10 && !userId; attempt++) {
+      const number = String(randomInt(0, 100_000_000)).padStart(8, "0");
       try {
         const [row] = await sql`
           insert into users (username, display_name, avatar_color, invite_code, recovery_hash, recovery_enc, platform, locale)
@@ -60,6 +59,17 @@ export const authRoutes = new Hono<Env>()
     const { recoveryKey } = await jsonBody(c, recoverySchema);
     await deleteAccount(c.var.deps.sql, await findByRecovery(c, recoveryKey));
     return c.json({ ok: true });
+  })
+  .post("/rotate-recovery", requireAuth, async (c) => {
+    const { sql, config } = c.var.deps;
+    const me = c.var.user.id;
+    const recoveryKey = newRecoveryKey();
+    await sql.begin(async (tx) => {
+      await tx`update users set recovery_hash = ${hashRecoveryKey(recoveryKey)!}, recovery_enc = ${encrypt(config.secretKey, recoveryKey)}
+        where id = ${me}`;
+      await tx`delete from tokens where user_id = ${me} and hash <> ${c.var.tokenHash}`;
+    });
+    return c.json({ recoveryKey });
   })
   .get("/recovery-key", requireAuth, async (c) => {
     const { sql, config } = c.var.deps;

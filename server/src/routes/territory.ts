@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { requireAuth } from "../auth";
-import { ApiError, badRequest, parse, uuid, type Env } from "../http";
-import { parseMonth } from "../territory";
+import { ApiError, badRequest, notFound, parse, uuid, type Env } from "../http";
+import { parentsForBbox, parseMonth } from "../territory";
 import { rankBoard } from "./leaderboards";
 
 const MAX_SPAN_DEG = 0.6;
@@ -23,12 +23,19 @@ export const territoryRoutes = new Hono<Env>()
     const { sql } = c.var.deps;
     const me = c.var.user.id;
     const [mine] = await sql`select club_id from club_members where user_id = ${me}`;
+    if (clubId) {
+      const [club] = await sql`select is_public from clubs where id = ${clubId}`;
+      if (!club || (!club.is_public && mine?.club_id !== clubId)) throw notFound("Club");
+    }
+    const parents = sql.array(parentsForBbox(minLat, minLng, maxLat, maxLng), "TEXT");
     const rows = await sql`
       select x.cell, x.owner_id, x.club_id, u.display_name, u.avatar_color,
         exists(select 1 from friendships f where f.user_id = ${me} and f.friend_id = x.owner_id) as is_friend,
-        exists(select 1 from blocks b where b.blocker_id = ${me} and b.blocked_id = x.owner_id) as is_blocked
+        exists(select 1 from blocks b where (b.blocker_id = ${me} and b.blocked_id = x.owner_id)
+          or (b.blocker_id = x.owner_id and b.blocked_id = ${me})) as is_blocked
       from cells x join users u on u.id = x.owner_id
-      where x.lat between ${minLat} and ${maxLat} and x.lng between ${minLng} and ${maxLng}
+      where x.parent5 = any(${parents}::text[]) and u.local_only = false
+        and x.lat between ${minLat} and ${maxLat} and x.lng between ${minLng} and ${maxLng}
         ${clubId ? sql`and x.club_id = ${clubId}` : sql``}
       limit ${MAX_CELLS}`;
     const myClub: string | null = mine?.club_id ?? null;
@@ -69,6 +76,10 @@ export const territoryRoutes = new Hono<Env>()
       range = parseMonth(q.month);
     } catch {
       throw badRequest("month must be YYYY-MM");
+    }
+    const first = parseMonth(c.var.deps.config.seasonStartMonth).start;
+    if (range.start < first || range.start.getTime() > parseMonth(undefined).start.getTime()) {
+      throw badRequest(`month must be between ${c.var.deps.config.seasonStartMonth} and the current month`, "invalid_month");
     }
     const { start, end, current } = range;
     const { sql } = c.var.deps;

@@ -39,7 +39,7 @@ describe("device auth", () => {
     expect(r.status).toBe(200);
     expect(r.json.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(r.json.recoveryKey).toMatch(/^RC-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}$/);
-    expect(r.json.me.username).toMatch(/^driver\d{4,6}$/);
+    expect(r.json.me.username).toMatch(/^driver\d{8}$/);
     expect(r.json.me.privacy).toEqual({ localOnly: false, hideFromLeaderboards: false, cloudBackup: false });
     expect(r.json.me.inviteCode).toHaveLength(8);
     const [row] = await t.sql`select recovery_hash, recovery_enc from users where id = ${r.json.me.id}`;

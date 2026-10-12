@@ -40,7 +40,7 @@ export function createApp(opts: { sql: Sql; config: Config; generateImage?: Imag
       : config.geminiApiKey
         ? geminiGenerator(config.geminiApiKey, config.geminiImageModel)
         : null;
-  const deps = { sql, config, generateImage: config.geminiApiKey ? generateImage : null, limiter: opts.limiter ?? new RateLimiter() };
+  const deps = { sql, config, generateImage: config.geminiApiKey ? generateImage : null, limiter: opts.limiter ?? new RateLimiter(), boardCache: new Map() };
 
   const app = new Hono<Env>();
 

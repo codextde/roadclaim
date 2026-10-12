@@ -1,0 +1,5 @@
+# Publishes the API on the host for self-hosting without Coolify (not needed on Coolify).
+services:
+  api:
+    ports:
+      - "${API_PORT:-8080}:8080"

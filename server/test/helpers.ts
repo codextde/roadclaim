@@ -1,5 +1,5 @@
 import { afterAll } from "bun:test";
-import { gridDisk, latLngToCell } from "h3-js";
+import { gridDisk, gridDistance, latLngToCell } from "h3-js";
 import { randomUUID } from "node:crypto";
 import { createApp } from "../src/app";
 import { loadConfig, type Config } from "../src/config";
@@ -22,10 +22,12 @@ export async function setup(opts: { config?: Partial<Config>; generateImage?: Im
     await migrate(sql);
     migrated = true;
   }
-  await sql`truncate users, clubs, cells, cell_events, mod_usage_global restart identity cascade`;
+  await sql`truncate users, clubs, cells, cell_events, mod_usage_global, mod_attempts_global, reports restart identity cascade`;
   const config: Config = {
     ...loadConfig({ DATABASE_URL, SECRET_KEY: "test-secret-key-0123456789", CORS_ORIGINS: "https://roadclaim.codext.de" }),
     publicUrl: "https://api.test",
+    boardCacheMs: 0,
+    seasonStartMonth: "2020-01",
     ...opts.config,
   };
   const app = createApp({ sql, config, generateImage: opts.generateImage ?? null, limiter: opts.limiter });
@@ -75,20 +77,30 @@ function rnd() {
 }
 
 export function cellsAround(lat: number, lng: number, k = 1): string[] {
-  return gridDisk(latLngToCell(lat, lng, 9), k);
+  const left = gridDisk(latLngToCell(lat, lng, 9), k);
+  const path = [left.shift()!];
+  while (left.length) {
+    const last = path[path.length - 1]!;
+    let best = 0;
+    for (let i = 1; i < left.length; i++) if (gridDistance(last, left[i]!) < gridDistance(last, left[best]!)) best = i;
+    path.push(left.splice(best, 1)[0]!);
+  }
+  return path;
 }
 
 export function drive(cells: string[], extra: Record<string, unknown> = {}) {
   const startedAt = new Date(Date.now() - 3600_000);
+  const distanceM = typeof extra.distanceM === "number" ? extra.distanceM : 20_000;
+  const movingS = Math.max(600, Math.round(distanceM / 20));
   return {
     id: randomUUID(),
     startedAt: startedAt.toISOString(),
     endedAt: new Date(startedAt.getTime() + 1800_000).toISOString(),
-    distanceM: 20_000,
-    durationS: 1800,
-    movingS: 1600,
-    maxSpeedMps: 30,
-    avgSpeedMps: 12.5,
+    distanceM,
+    durationS: movingS + 200,
+    movingS,
+    maxSpeedMps: 40,
+    avgSpeedMps: Math.min(70, distanceM / movingS),
     elevationGainM: 120,
     elevationLossM: 100,
     brakePresses: 14,

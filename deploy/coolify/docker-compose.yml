@@ -8,9 +8,9 @@
 # Optional variables in the Coolify UI: GEMINI_API_KEY, GEMINI_IMAGE_MODEL, MODS_PER_DAY,
 # MODS_GLOBAL_PER_DAY, CORS_ORIGINS, PUBLIC_URL.
 #
-# Local smoke test from the repo root:
-#   SERVICE_PASSWORD_POSTGRES=dev SERVICE_PASSWORD_64_SECRET=devsecretdevsecret \
-#     docker compose -f deploy/coolify/docker-compose.yml up --build
+# Plain Docker (see server/README.md), from the repo root:
+#   SERVICE_PASSWORD_POSTGRES=change-me SERVICE_PASSWORD_64_SECRET=$(openssl rand -hex 32) \
+#     docker compose -f deploy/coolify/docker-compose.yml -f deploy/coolify/docker-compose.local.yml up -d --build
 
 services:
   api:

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { gridDistance } from "h3-js";
 import { z } from "zod";
 import { requireAuth } from "../auth";
 import { ApiError, enforceLimit, forbidden, idParam, jsonBody, uuid, type Env } from "../http";
@@ -8,6 +9,7 @@ import { evaluateTrophies } from "../trophies";
 const num = (max: number) => z.number().finite().min(0).max(max);
 const count = z.number().int().min(0).max(1_000_000);
 
+const MAX_CELL_GAP = 20;
 const isoOffset = /(?:Z|([+-])(\d{2}):?(\d{2}))$/i;
 
 const driveSchema = z
@@ -19,7 +21,7 @@ const driveSchema = z
     distanceM: num(5_000_000),
     durationS: num(7 * 86400),
     movingS: num(7 * 86400),
-    maxSpeedMps: num(150),
+    maxSpeedMps: num(90),
     avgSpeedMps: num(70),
     elevationGainM: num(100_000),
     elevationLossM: num(100_000),
@@ -36,8 +38,30 @@ const driveSchema = z
     if (Date.parse(d.endedAt) < Date.parse(d.startedAt)) ctx.addIssue({ code: "custom", message: "endedAt is before startedAt", path: ["endedAt"] });
     if (Date.parse(d.startedAt) > Date.now() + 10 * 60_000) ctx.addIssue({ code: "custom", message: "startedAt is in the future", path: ["startedAt"] });
     if (d.cells.length > d.distanceM / 100 + 20) ctx.addIssue({ code: "custom", message: "too many cells for this distance", path: ["cells"] });
+    if (d.movingS > d.durationS) ctx.addIssue({ code: "custom", message: "movingS exceeds durationS", path: ["movingS"] });
+    if (d.distanceM > d.maxSpeedMps * d.movingS * 1.1 + 500) {
+      ctx.addIssue({ code: "custom", message: "distanceM is not plausible for maxSpeedMps and movingS", path: ["distanceM"] });
+    }
     const bad = d.cells.find((c) => !isRes9Cell(c));
-    if (bad !== undefined) ctx.addIssue({ code: "custom", message: `invalid H3 resolution 9 cell ${bad}`, path: ["cells"] });
+    if (bad !== undefined) {
+      ctx.addIssue({ code: "custom", message: `invalid H3 resolution 9 cell ${bad}`, path: ["cells"] });
+      return;
+    }
+    let hops = 0;
+    for (let i = 1; i < d.cells.length; i++) {
+      let step: number;
+      try {
+        step = gridDistance(d.cells[i - 1]!, d.cells[i]!);
+      } catch {
+        step = Number.POSITIVE_INFINITY;
+      }
+      if (!(step <= MAX_CELL_GAP)) {
+        ctx.addIssue({ code: "custom", message: `cells ${i - 1} and ${i} are too far apart`, path: ["cells"] });
+        return;
+      }
+      hops += step;
+    }
+    if (hops * 175 > d.distanceM * 1.5 + 1000) ctx.addIssue({ code: "custom", message: "cells cover more ground than distanceM", path: ["cells"] });
   });
 
 function localTime(startedAt: string, offsetMin: number | undefined): { date: string; hour: number } {

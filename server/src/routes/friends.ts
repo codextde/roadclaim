@@ -5,7 +5,7 @@ import type { Sql } from "../db";
 import { ApiError, badRequest, idParam, jsonBody, notFound, parse, uuid, type Env } from "../http";
 import { userStats } from "../stats";
 import { listTrophies } from "../trophies";
-import { areFriends, publicUser, publicUsers, type PublicUser } from "../users";
+import { areFriends, blockedWith, publicUser, publicUsers, visibleTo, type PublicUser } from "../users";
 
 async function befriend(tx: Sql, a: string, b: string): Promise<void> {
   await tx`insert into friendships (user_id, friend_id) values (${a}, ${b}), (${b}, ${a}) on conflict do nothing`;
@@ -18,7 +18,8 @@ async function assertNotBlocked(sql: Sql, a: string, b: string): Promise<void> {
   if (r) throw new ApiError(403, "blocked", "You cannot add this user");
 }
 
-async function requireUser(sql: Sql, id: string): Promise<PublicUser> {
+async function requireUser(sql: Sql, id: string, viewer?: string): Promise<PublicUser> {
+  if (viewer && !(await visibleTo(sql, viewer, id))) throw notFound("User");
   const user = await publicUser(sql, id);
   if (!user) throw notFound("User");
   return user;
@@ -33,7 +34,7 @@ export const userRoutes = new Hono<Env>()
     const rows = await sql`
       select id from users
       where id <> ${c.var.user.id} and local_only = false
-        and id not in (select blocked_id from blocks where blocker_id = ${c.var.user.id})
+        and id not in (${blockedWith(sql, c.var.user.id)})
         and (lower(username) like ${pattern} or lower(display_name) like ${pattern})
       order by lower(username) = ${q} desc, username limit 20`;
     const users = await publicUsers(sql, rows.map((r: { id: string }) => r.id));
@@ -42,8 +43,8 @@ export const userRoutes = new Hono<Env>()
   .get("/:id", async (c) => {
     const { sql } = c.var.deps;
     const id = idParam(c);
-    const user = await requireUser(sql, id);
     const me = c.var.user.id;
+    const user = await requireUser(sql, id, me);
     const [req] = await sql`
       select case when from_id = ${me} then 'out' else 'in' end as dir from friend_requests
       where (from_id = ${me} and to_id = ${id}) or (from_id = ${id} and to_id = ${me}) limit 1`;
@@ -59,7 +60,7 @@ export const userRoutes = new Hono<Env>()
 export const compareRoutes = new Hono<Env>().use("*", requireAuth).get("/:userId", async (c) => {
   const { sql } = c.var.deps;
   const id = idParam(c, "userId");
-  const user = await requireUser(sql, id);
+  const user = await requireUser(sql, id, c.var.user.id);
   const [me, them] = await Promise.all([userStats(sql, c.var.user.id, "season"), userStats(sql, id, "season")]);
   return c.json({ me, them, user });
 });
