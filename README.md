@@ -34,7 +34,9 @@ No stat is worth your safety: Roadclaim needs no interaction while driving, and 
 ## Download
 
 <a href="https://roadclaim.codext.de/ios"><img alt="Download on the App Store" src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" height="48"></a>
-<a href="https://roadclaim.codext.de/android"><img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="70"></a>
+<a href="https://play.google.com/store/apps/details?id=de.codext.roadclaim"><img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="70"></a>
+
+Android is live on Google Play. The iOS version is in App Store review; until it is approved, you can build it yourself (see Development).
 
 ## Privacy design
 
